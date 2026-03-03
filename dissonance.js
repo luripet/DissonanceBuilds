@@ -4554,7 +4554,7 @@
       init_logger();
       init_toasts();
       import_react_native5 = __toESM(require_react_native());
-      versionHash = "c8bcd6a-main";
+      versionHash = "b818466-main";
     }
   });
 
@@ -6524,6 +6524,8 @@
       var accountIndex = sections.findIndex((i) => Array.isArray(i?.settings) && i.settings.includes("ACCOUNT"));
       var index = accountIndex === -1 ? 1 : accountIndex + 1;
       Object.keys(registeredSections).forEach((sect) => {
+        if (registeredSections[sect].length === 0)
+          return;
         sections.splice(index++, 0, {
           label: sect,
           title: sect,
@@ -11481,7 +11483,7 @@
             uri: dissonance_default
           },
           render: () => Promise.resolve().then(() => (init_General(), General_exports)),
-          useTrailing: () => `(${"c8bcd6a-main"})`
+          useTrailing: () => `(${"b818466-main"})`
         },
         {
           key: "DISSONANCE_PLUGINS",
@@ -11513,7 +11515,7 @@
       ]
     });
     registerSection({
-      name: "Dissonance",
+      name: "DissonanceCompat",
       items: []
     });
   }
@@ -11714,7 +11716,7 @@
         alert([
           "Failed to load Dissonance!\n",
           `Build Number: ${ClientInfoManager.Build}`,
-          `Dissonance: ${"c8bcd6a-main"}`,
+          `Dissonance: ${"b818466-main"}`,
           stack || e?.toString?.()
         ].join("\n"));
       }
