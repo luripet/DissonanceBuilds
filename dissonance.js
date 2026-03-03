@@ -4554,7 +4554,7 @@
       init_logger();
       init_toasts();
       import_react_native5 = __toESM(require_react_native());
-      versionHash = "b818466-main";
+      versionHash = "269fa57-main";
     }
   });
 
@@ -6512,12 +6512,7 @@
         set: void 0
       });
     });
-    var isFirstRender = true;
     unpatches.push(after("default", SettingsOverviewScreen, (_2, ret) => {
-      if (isFirstRender) {
-        isFirstRender = false;
-        return;
-      }
       var sections = findInReactTree(ret, (i) => i?.props?.sections)?.props?.sections;
       if (!Array.isArray(sections))
         return;
@@ -6525,6 +6520,8 @@
       var index = accountIndex === -1 ? 1 : accountIndex + 1;
       Object.keys(registeredSections).forEach((sect) => {
         if (registeredSections[sect].length === 0)
+          return;
+        if (sections.some((s) => s?.label === sect || s?.title === sect))
           return;
         sections.splice(index++, 0, {
           label: sect,
@@ -11483,7 +11480,7 @@
             uri: dissonance_default
           },
           render: () => Promise.resolve().then(() => (init_General(), General_exports)),
-          useTrailing: () => `(${"b818466-main"})`
+          useTrailing: () => `(${"269fa57-main"})`
         },
         {
           key: "DISSONANCE_PLUGINS",
@@ -11716,7 +11713,7 @@
         alert([
           "Failed to load Dissonance!\n",
           `Build Number: ${ClientInfoManager.Build}`,
-          `Dissonance: ${"b818466-main"}`,
+          `Dissonance: ${"269fa57-main"}`,
           stack || e?.toString?.()
         ].join("\n"));
       }
