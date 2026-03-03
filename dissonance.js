@@ -3575,7 +3575,7 @@
       "use strict";
       init_asyncIteratorSymbol();
       init_promiseAllSettled();
-      pyonLoaderIdentity = globalThis.__PYON_LOADER__;
+      pyonLoaderIdentity = globalThis.__PYON_LOADER__ ?? globalThis.__DISSONANCE_LOADER__;
       dissonanceLoaderIdentity = globalThis.__dissonance_loader;
       getDissonanceLoaderIdentity();
     }
@@ -4554,7 +4554,7 @@
       init_logger();
       init_toasts();
       import_react_native5 = __toESM(require_react_native());
-      versionHash = "ca75066-main";
+      versionHash = "ce40815-main";
     }
   });
 
@@ -11535,7 +11535,7 @@
             uri: dissonance_default
           },
           render: () => Promise.resolve().then(() => (init_General(), General_exports)),
-          useTrailing: () => `(${"ca75066-main"})`
+          useTrailing: () => `(${"ce40815-main"})`
         },
         {
           key: "DISSONANCE_PLUGINS",
@@ -11768,7 +11768,7 @@
         alert([
           "Failed to load Dissonance!\n",
           `Build Number: ${ClientInfoManager.Build}`,
-          `Dissonance: ${"ca75066-main"}`,
+          `Dissonance: ${"ce40815-main"}`,
           stack || e?.toString?.()
         ].join("\n"));
       }
