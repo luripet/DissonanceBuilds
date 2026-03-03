@@ -4554,7 +4554,7 @@
       init_logger();
       init_toasts();
       import_react_native5 = __toESM(require_react_native());
-      versionHash = "269fa57-main";
+      versionHash = "ca75066-main";
     }
   });
 
@@ -6469,67 +6469,122 @@
   });
 
   // src/lib/ui/settings/patches/tabs.tsx
-  function patchTabsUI(unpatches) {
-    var getRows = () => Object.values(registeredSections).flatMap((sect) => sect.map((row) => ({
-      [row.key]: {
-        type: "pressable",
-        title: row.title,
-        icon: row.icon,
-        IconComponent: () => /* @__PURE__ */ jsx(TableRow.Icon, {
-          source: row.icon
-        }),
-        usePredicate: row.usePredicate,
-        useTrailing: row.useTrailing,
-        onPress: wrapOnPress(row.onPress, null, row.render, row.title()),
-        withArrow: true,
-        ...row.rawTabsConfig
+  function isSectionArray(value) {
+    return Array.isArray(value) && value.some((section) => Array.isArray(section?.settings));
+  }
+  function findSettingsSections(tree) {
+    var reactSections = findInReactTree(tree, (i) => isSectionArray(i?.props?.sections))?.props?.sections;
+    if (isSectionArray(reactSections))
+      return reactSections;
+    var queue = [
+      tree
+    ];
+    var seen = /* @__PURE__ */ new Set();
+    var scanned = 0;
+    while (queue.length && scanned < 4e3) {
+      var node = queue.shift();
+      scanned++;
+      if (!node || typeof node !== "object")
+        continue;
+      if (Array.isArray(node)) {
+        if (isSectionArray(node))
+          return node;
+        node.forEach((item) => queue.push(item));
+        continue;
       }
-    }))).reduce((a, c2) => Object.assign(a, c2), {});
-    var origRendererConfig = settingConstants.SETTING_RENDERER_CONFIG;
-    var rendererConfigValue = settingConstants.SETTING_RENDERER_CONFIG;
-    Object.defineProperty(settingConstants, "SETTING_RENDERER_CONFIG", {
-      enumerable: true,
-      configurable: true,
-      get: () => ({
-        ...rendererConfigValue,
-        DISSONANCE_CUSTOM_PAGE: {
-          type: "route",
-          title: () => "Dissonance",
-          screen: {
-            route: "DISSONANCE_CUSTOM_PAGE",
-            getComponent: () => CustomPageRenderer
-          }
-        },
-        ...getRows()
-      }),
-      set: (v2) => rendererConfigValue = v2
-    });
-    unpatches.push(() => {
-      Object.defineProperty(settingConstants, "SETTING_RENDERER_CONFIG", {
-        value: origRendererConfig,
-        writable: true,
-        get: void 0,
-        set: void 0
+      if (seen.has(node))
+        continue;
+      seen.add(node);
+      if (isSectionArray(node.sections))
+        return node.sections;
+      if (isSectionArray(node.props?.sections))
+        return node.props.sections;
+      Object.values(node).forEach((value) => {
+        if (value && typeof value === "object")
+          queue.push(value);
       });
-    });
-    unpatches.push(after("default", SettingsOverviewScreen, (_2, ret) => {
-      var sections = findInReactTree(ret, (i) => i?.props?.sections)?.props?.sections;
-      if (!Array.isArray(sections))
-        return;
-      var accountIndex = sections.findIndex((i) => Array.isArray(i?.settings) && i.settings.includes("ACCOUNT"));
-      var index = accountIndex === -1 ? 1 : accountIndex + 1;
-      Object.keys(registeredSections).forEach((sect) => {
-        if (registeredSections[sect].length === 0)
-          return;
-        if (sections.some((s) => s?.label === sect || s?.title === sect))
-          return;
-        sections.splice(index++, 0, {
-          label: sect,
-          title: sect,
-          settings: registeredSections[sect].map((a) => a.key)
+    }
+    return null;
+  }
+  function patchTabsUI(unpatches) {
+    try {
+      var getRows = () => Object.values(registeredSections).flatMap((sect) => sect.map((row) => ({
+        [row.key]: {
+          type: "pressable",
+          title: row.title,
+          icon: row.icon,
+          IconComponent: () => /* @__PURE__ */ jsx(TableRow.Icon, {
+            source: row.icon
+          }),
+          usePredicate: row.usePredicate,
+          useTrailing: row.useTrailing,
+          onPress: wrapOnPress(row.onPress, null, row.render, row.title()),
+          withArrow: true,
+          ...row.rawTabsConfig
+        }
+      }))).reduce((a, c2) => Object.assign(a, c2), {});
+      var origRendererConfig = settingConstants.SETTING_RENDERER_CONFIG;
+      var rendererConfigValue = settingConstants.SETTING_RENDERER_CONFIG;
+      Object.defineProperty(settingConstants, "SETTING_RENDERER_CONFIG", {
+        enumerable: true,
+        configurable: true,
+        get: () => ({
+          ...rendererConfigValue,
+          DISSONANCE_CUSTOM_PAGE: {
+            type: "route",
+            title: () => "Dissonance",
+            screen: {
+              route: "DISSONANCE_CUSTOM_PAGE",
+              getComponent: () => CustomPageRenderer
+            }
+          },
+          ...getRows()
+        }),
+        set: (v2) => rendererConfigValue = v2
+      });
+      unpatches.push(() => {
+        Object.defineProperty(settingConstants, "SETTING_RENDERER_CONFIG", {
+          value: origRendererConfig,
+          writable: true,
+          get: void 0,
+          set: void 0
         });
       });
-    }));
+      unpatches.push(after("default", SettingsOverviewScreen, (_2, ret) => {
+        var sections = findSettingsSections(ret);
+        if (!sections)
+          return;
+        var sectionNames = Object.keys(registeredSections).filter((name) => registeredSections[name].length > 0);
+        if (!sectionNames.length)
+          return;
+        var accountIndex = sections.findIndex((i) => Array.isArray(i?.settings) && i.settings.includes("ACCOUNT"));
+        var insertIndex = accountIndex === -1 ? Math.min(1, sections.length) : accountIndex + 1;
+        sectionNames.forEach((sectionName) => {
+          var keys = registeredSections[sectionName].map((row) => row.key);
+          var existing = sections.find((s) => s?.label === sectionName || s?.title === sectionName);
+          if (existing) {
+            if (!Array.isArray(existing.settings))
+              existing.settings = [];
+            keys.forEach((key) => !existing.settings.includes(key) && existing.settings.push(key));
+            return;
+          }
+          sections.splice(insertIndex++, 0, {
+            label: sectionName,
+            title: sectionName,
+            settings: keys
+          });
+        });
+        var fallbackSection = sections.find((s) => Array.isArray(s?.settings) && s.settings.includes("ACCOUNT")) ?? sections.find((s) => Array.isArray(s?.settings));
+        if (!fallbackSection)
+          return;
+        sectionNames.flatMap((name) => registeredSections[name].map((row) => row.key)).forEach((key) => {
+          var exists = sections.some((s) => Array.isArray(s?.settings) && s.settings.includes(key));
+          if (!exists)
+            fallbackSection.settings.push(key);
+        });
+      }));
+    } catch (e) {
+    }
   }
   var settingConstants, SettingsOverviewScreen;
   var init_tabs = __esm({
@@ -11480,7 +11535,7 @@
             uri: dissonance_default
           },
           render: () => Promise.resolve().then(() => (init_General(), General_exports)),
-          useTrailing: () => `(${"269fa57-main"})`
+          useTrailing: () => `(${"ca75066-main"})`
         },
         {
           key: "DISSONANCE_PLUGINS",
@@ -11713,7 +11768,7 @@
         alert([
           "Failed to load Dissonance!\n",
           `Build Number: ${ClientInfoManager.Build}`,
-          `Dissonance: ${"269fa57-main"}`,
+          `Dissonance: ${"ca75066-main"}`,
           stack || e?.toString?.()
         ].join("\n"));
       }
