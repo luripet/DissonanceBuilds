@@ -4554,7 +4554,7 @@
       init_logger();
       init_toasts();
       import_react_native5 = __toESM(require_react_native());
-      versionHash = "39a3821-main";
+      versionHash = "c69be3c-main";
     }
   });
 
@@ -6382,12 +6382,15 @@
       CustomPageRenderer = React.memo(() => {
         var navigation2 = NavigationNative.useNavigation();
         var route = NavigationNative.useRoute();
-        var { render: PageComponent, ...args } = route.params;
+        var { render: PageComponent, noErrorBoundary, ...args } = route.params ?? {};
         React.useEffect(() => void navigation2.setOptions({
           ...args
         }), []);
-        return /* @__PURE__ */ jsx(ErrorBoundary, {
-          children: /* @__PURE__ */ jsx(PageComponent, {})
+        if (typeof PageComponent !== "function")
+          return null;
+        var content = /* @__PURE__ */ jsx(PageComponent, {});
+        return noErrorBoundary ? content : /* @__PURE__ */ jsx(ErrorBoundary, {
+          children: content
         });
       });
     }
@@ -6399,7 +6402,7 @@
     return /* @__PURE__ */ jsx(Fragment, {
       children: Object.keys(registeredSections).map((sect) => registeredSections[sect].length > 0 && /* @__PURE__ */ jsx(LegacyFormSection, {
         title: sect,
-        children: registeredSections[sect].filter((r) => r.usePredicate?.() ?? true).map((row, i, arr) => /* @__PURE__ */ jsxs(Fragment, {
+        children: registeredSections[sect].filter((r) => r.usePredicate?.() ?? true).map((row, i, arr) => /* @__PURE__ */ jsxs(React.Fragment, {
           children: [
             /* @__PURE__ */ jsx(LegacyFormRow, {
               label: row.title(),
@@ -6413,7 +6416,7 @@
             }),
             i !== arr.length - 1 && /* @__PURE__ */ jsx(LegacyFormDivider, {})
           ]
-        }))
+        }, row.key))
       }, sect))
     });
   }
@@ -6421,10 +6424,6 @@
     try {
       unpatches.push(after("default", findByNameLazy("getScreens", false), (_a, screens) => ({
         ...screens,
-        DissonanceCustomPage: {
-          title: "Dissonance",
-          render: () => /* @__PURE__ */ jsx(CustomPageRenderer, {})
-        },
         DISSONANCE_CUSTOM_PAGE: {
           title: "Dissonance",
           render: () => /* @__PURE__ */ jsx(CustomPageRenderer, {})
@@ -6470,11 +6469,6 @@
   });
 
   // src/lib/ui/settings/patches/tabs.tsx
-  function useIsFirstRender() {
-    var firstRender = false;
-    React.useEffect(() => void (firstRender = true), []);
-    return firstRender;
-  }
   function patchTabsUI(unpatches) {
     var getRows = () => Object.values(registeredSections).flatMap((sect) => sect.map((row) => ({
       [row.key]: {
@@ -6498,14 +6492,6 @@
       configurable: true,
       get: () => ({
         ...rendererConfigValue,
-        DissonanceCustomPage: {
-          type: "route",
-          title: () => "Dissonance",
-          screen: {
-            route: "DissonanceCustomPage",
-            getComponent: () => CustomPageRenderer
-          }
-        },
         DISSONANCE_CUSTOM_PAGE: {
           type: "route",
           title: () => "Dissonance",
@@ -6526,11 +6512,17 @@
         set: void 0
       });
     });
+    var isFirstRender = true;
     unpatches.push(after("default", SettingsOverviewScreen, (_2, ret) => {
-      if (useIsFirstRender())
+      if (isFirstRender) {
+        isFirstRender = false;
         return;
-      var { sections } = findInReactTree(ret, (i) => i.props?.sections).props;
-      var index = -~sections.findIndex((i) => i.settings.includes("ACCOUNT")) || 1;
+      }
+      var sections = findInReactTree(ret, (i) => i?.props?.sections)?.props?.sections;
+      if (!Array.isArray(sections))
+        return;
+      var accountIndex = sections.findIndex((i) => Array.isArray(i?.settings) && i.settings.includes("ACCOUNT"));
+      var index = accountIndex === -1 ? 1 : accountIndex + 1;
       Object.keys(registeredSections).forEach((sect) => {
         sections.splice(index++, 0, {
           label: sect,
@@ -11489,7 +11481,7 @@
             uri: dissonance_default
           },
           render: () => Promise.resolve().then(() => (init_General(), General_exports)),
-          useTrailing: () => `(${"39a3821-main"})`
+          useTrailing: () => `(${"c69be3c-main"})`
         },
         {
           key: "DISSONANCE_PLUGINS",
@@ -11722,7 +11714,7 @@
         alert([
           "Failed to load Dissonance!\n",
           `Build Number: ${ClientInfoManager.Build}`,
-          `Dissonance: ${"39a3821-main"}`,
+          `Dissonance: ${"c69be3c-main"}`,
           stack || e?.toString?.()
         ].join("\n"));
       }
