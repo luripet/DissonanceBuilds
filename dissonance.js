@@ -4554,7 +4554,7 @@
       init_logger();
       init_toasts();
       import_react_native5 = __toESM(require_react_native());
-      versionHash = "c69be3c-main";
+      versionHash = "c8bcd6a-main";
     }
   });
 
@@ -6484,7 +6484,7 @@
         withArrow: true,
         ...row.rawTabsConfig
       }
-    }))).reduce((a, c2) => Object.assign(a, c2));
+    }))).reduce((a, c2) => Object.assign(a, c2), {});
     var origRendererConfig = settingConstants.SETTING_RENDERER_CONFIG;
     var rendererConfigValue = settingConstants.SETTING_RENDERER_CONFIG;
     Object.defineProperty(settingConstants, "SETTING_RENDERER_CONFIG", {
@@ -11481,7 +11481,7 @@
             uri: dissonance_default
           },
           render: () => Promise.resolve().then(() => (init_General(), General_exports)),
-          useTrailing: () => `(${"c69be3c-main"})`
+          useTrailing: () => `(${"c8bcd6a-main"})`
         },
         {
           key: "DISSONANCE_PLUGINS",
@@ -11714,7 +11714,7 @@
         alert([
           "Failed to load Dissonance!\n",
           `Build Number: ${ClientInfoManager.Build}`,
-          `Dissonance: ${"c69be3c-main"}`,
+          `Dissonance: ${"c8bcd6a-main"}`,
           stack || e?.toString?.()
         ].join("\n"));
       }
